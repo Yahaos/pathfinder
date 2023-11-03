@@ -1,32 +1,38 @@
 CC = clang
-CFLAGS = -std=c11 -Wall -Wextra -Werror -Wpedantic 
+CFLAGS = -std=c11 -Wall -Wextra -Werror -Wpedantic
 CFLAGS += -Iinc -Ilibmx/inc
 
 TARGET = pathfinder
 
-SRC = ./src/*.c
-OBJ = ./obj/*.o
+SRC_DIR = ./src
+OBJ_DIR = ./obj
+LIBMX_DIR = ./libmx/src
 
-LIBMX_SRC = ./libmx/src/*.c 
-LIBMX_OBJ = ./libmx/obj/*.o
+SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
+OBJ_FILES = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
+LIBMX_FILES = $(wildcard $(LIBMX_DIR)/*.c)
+LIBMX_OBJ = $(patsubst $(LIBMX_DIR)/%.c,$(OBJ_DIR)/%.o,$(LIBMX_FILES))
 
 default: $(TARGET)
 
-$(TARGET): $(OBJ) $(LIBMX_OBJ)
+$(TARGET): $(OBJ_FILES) $(LIBMX_OBJ)
 	$(CC) $(CFLAGS) $^ -o $@
-	
-./obj/%.o: ./src/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
-	
-./libmx/obj/%.o: ./libmx/src/%.c
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+$(OBJ_DIR)/%.o: $(LIBMX_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
 clean:
-	-$(RM) -f $(OBJ) $(LIBMX_OBJ)
-	
+	-$(RM) -rf $(OBJ_DIR)
+
 install: $(TARGET)
 	cp $(TARGET) /usr/local/bin/
-	
+
 uninstall:
 	rm -f /usr/local/bin/$(TARGET)
 
